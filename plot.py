@@ -375,46 +375,46 @@ def plot_all() -> None:
     plot_analysis(name_filter=".npy")
 
     # 0
-    plot_parameter_sweep(
-        parameter="noise_var",
-        sims_path=paths.SIMS_NOISE_STD_DIR,
-        patterns_path=paths.PATTERNS_NOISE_STD_DIR,
-        recalls_path=paths.RECALLS_NOISE_STD_DIR,
-        name_filter=".npy",
-        title="Recalls Noise Variance",
-        xlabel="Noise standard deviation",
-        ylabel="Average words recalled",
-        file_name="noise_var.pdf",
-        panel_num=0,
-    )
+    #plot_parameter_sweep(
+    #    parameter="noise_var",
+    #    sims_path=paths.SIMS_NOISE_STD_DIR,
+    #    patterns_path=paths.PATTERNS_NOISE_STD_DIR,
+    #    recalls_path=paths.RECALLS_NOISE_STD_DIR,
+    #    name_filter=".npy",
+    #    title="Recalls Noise Variance",
+    #    xlabel="Noise standard deviation",
+    #    ylabel="Average words recalled",
+    #    file_name="noise_var.pdf",
+    #    panel_num=0,
+    #)
 
     # 1
-    plot_parameter_sweep(
-        parameter="cont_forth",
-        sims_path=paths.SIMS_CONT_FORTH_DIR,
-        patterns_path=paths.PATTERNS_CONT_FORTH_DIR,
-        recalls_path=paths.RECALLS_CONT_FORTH_DIR,
-        name_filter=".npy",
-        title="Recalls Forward Contiguity",
-        xlabel="Forward contiguity",
-        ylabel="Average words recalled",
-        file_name="cont_forth.pdf",
-        panel_num=1,
-    )
+    # plot_parameter_sweep(
+    #     parameter="cont_forth",
+    #     sims_path=paths.SIMS_CONT_FORTH_DIR,
+    #     patterns_path=paths.PATTERNS_CONT_FORTH_DIR,
+    #     recalls_path=paths.RECALLS_CONT_FORTH_DIR,
+    #     name_filter=".npy",
+    #     title="Recalls Forward Contiguity",
+    #     xlabel="Forward contiguity",
+    #     ylabel="Average words recalled",
+    #     file_name="cont_forth.pdf",
+    #     panel_num=1,
+    # )
 
     # 2
-    plot_parameter_sweep(
-        parameter="cont_forth",
-        sims_path=paths.SIMS_CONT_FORTH_LOW_DIR,
-        patterns_path=paths.PATTERNS_CONT_FORTH_LOW_DIR,
-        recalls_path=paths.RECALLS_CONT_FORTH_LOW_DIR,
-        name_filter=".npy",
-        title="Recalls Low Forward Contiguity",
-        xlabel="Forward contiguity",
-        ylabel="Average words recalled",
-        file_name="cont_forth_low.pdf",
-        panel_num=2,
-    )
+    # plot_parameter_sweep(
+    #     parameter="cont_forth",
+    #     sims_path=paths.SIMS_CONT_FORTH_LOW_DIR,
+    #     patterns_path=paths.PATTERNS_CONT_FORTH_LOW_DIR,
+    #     recalls_path=paths.RECALLS_CONT_FORTH_LOW_DIR,
+    #     name_filter=".npy",
+    #     title="Recalls Low Forward Contiguity",
+    #     xlabel="Forward contiguity",
+    #     ylabel="Average words recalled",
+    #     file_name="cont_forth_low.pdf",
+    #     panel_num=2,
+    # )
 
 
 if __name__ == "__main__":

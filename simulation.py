@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
+import sys
 
 import numpy as np
 import pandas as pd
@@ -30,8 +31,8 @@ from settings import paths
 # -------------------- Change parameters if needed here -------------------- #
 # -------------------------------------------------------------------------- #
 
-PATTERNS_DIR = paths.PATTERNS_CONT_FORTH_LOW_DIR  # paths. ...
-RECALLS_DIR = paths.RECALLS_CONT_FORTH_LOW_DIR  # paths. ...
+PATTERNS_DIR = paths.PATTERNS_SEEDS_DIR  # paths. ...
+RECALLS_DIR = paths.RECALLS_SEEDS_DIR  # paths. ...
 
 assert (
     PATTERNS_DIR is not None and RECALLS_DIR is not None
@@ -42,7 +43,10 @@ try:
         os.getenv("SLURM_ARRAY_TASK_ID")
     )  # Changes seed per cluster simulation
 except:
-    JOB_ID = 33  # Default seed for non-cluster use
+    JOB_ID = 33 # Default seed for non-cluster use
+    
+if len(sys.argv) == 2:
+    JOB_ID = int(sys.argv[1])
 
 np.random.seed(JOB_ID)
 
@@ -75,7 +79,7 @@ CONT_FORTH = PARAMETERS_DF.loc["cont_forth"].array[0] / NUM_NEURONS
 CONT_BACK = PARAMETERS_DF.loc["cont_back"].array[0] / NUM_NEURONS
 # For parameter sweeps (uncomment to select)
 # CONT_FORTH = sim.get_simulation_range_param("cont_forth", JOB_ID, 100) / NUM_NEURONS
-CONT_FORTH = sim.get_simulation_range_param("cont_forth_low", JOB_ID, 100) / NUM_NEURONS
+# CONT_FORTH = sim.get_simulation_range_param("cont_forth_low", JOB_ID, 100) / NUM_NEURONS
 # NOISE_VAR = sim.get_simulation_range_param("noise_var", JOB_ID, 100)
 
 # -------------------------------------------------------------------------- #
@@ -123,9 +127,9 @@ oscillation = np.vectorize(
     sim.oscillation_closure(sim.oscillation, SIN_MIN, SIN_MAX, NUM_NEURONS)
 )(time)
 
-currents = np.zeros((num_populations, len(time)))
-firing_rates = np.zeros((num_populations, len(time)))
-n_currents = connectivity_reg[:, initial_memory].astype(np.float)
+currents = np.zeros((num_populations, len(time)), dtype=np.float16)
+firing_rates = np.zeros((num_populations, len(time)), dtype=np.float16)
+n_currents = connectivity_reg[:, initial_memory].astype(np.float16)
 
 noise = get_noise(NOISE_VAR, population_sizes, time, num_populations)  # long
 
@@ -265,6 +269,6 @@ if JOB_ID == 33:
     plots.plot_weights(weights_forth, 3, "Forward Weights ", "weights_forth.pdf")
 
     # Noise
-    plots.plot_lines(
-        noise.T / T_STEP ** 0.5, T_STEP, 15, 0, "Noise", "Noise", "noise.png"
-    )
+    #plots.plot_lines(
+    #    noise.T / T_STEP ** 0.5, T_STEP, 15, 0, "Noise", "Noise", "noise.png"
+    #)
