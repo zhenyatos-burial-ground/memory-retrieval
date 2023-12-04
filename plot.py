@@ -146,7 +146,7 @@ def plot_analysis(name_filter: str) -> None:
     ) -> None:
 
         print("Plotting Average Words Recalled...")
-        mid_memory = 7
+        #mid_memory = 7
         data_sparse = np.ones_like(recalls_df.trial.values.astype(int))
         recalls_bin = csr_matrix(
             (
@@ -158,16 +158,16 @@ def plot_analysis(name_filter: str) -> None:
             )
         ).toarray()
         recalls_bincum = np.cumsum(recalls_bin, axis=1)
-        recalls_mean = np.mean(recalls_bincum, axis=0) * mid_memory
-        recalls_mean = recalls_mean * mid_memory / 50
-        tick_labels = np.arange(len(recalls_mean), dtype=int) * 100
+        recalls_mean = np.mean(recalls_bincum, axis=0) #* mid_memory
+        #recalls_mean = recalls_mean * mid_memory / 50
+        tick_labels = np.arange(len(recalls_mean)) / 10.0
+        print(tick_labels)
 
         fig, axis = plt.subplots()
-        axis.plot(recalls_mean)
+        axis.plot(tick_labels, recalls_mean)
         axis.set_title("Average Words Recalled")
         axis.set_xlabel("Time steps")
         axis.set_ylabel("Average words recalled")
-        axis.set_xticklabels(tick_labels)
 
         axis.text(
             -0.2,

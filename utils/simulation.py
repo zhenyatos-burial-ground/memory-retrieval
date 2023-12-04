@@ -153,13 +153,23 @@ def get_dynamics_memories(
 
 
 def get_connectivity_term(
-    connectivity: np.ndarray, excitator: float, num_neurons: int, sparsity: float
+    connectivity: np.ndarray, excitator: float, num_neurons: int, sparsity : float
 ) -> np.ndarray:
     return (
         excitator
         / num_neurons
         * (connectivity - sparsity)
         @ (connectivity.T - sparsity)
+    )
+
+def get_connectivity_term_new(
+    connectivity: np.ndarray, excitator: float, num_neurons: int, sparsity
+) -> np.ndarray:
+    return (
+        excitator
+        / num_neurons
+        * (connectivity - sparsity)
+        @ (connectivity.T - sparsity.reshape(len(sparsity), 1))
     )
 
 

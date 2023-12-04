@@ -27,6 +27,8 @@ import utils.plots as plots
 import utils.simulation as sim
 from settings import paths
 
+from embeddings import load_n_glove_embeddings, find_closest_embeddings, continuous_to_discrete
+
 # -------------------------------------------------------------------------- #
 # -------------------- Change parameters if needed here -------------------- #
 # -------------------------------------------------------------------------- #
@@ -51,7 +53,7 @@ if len(sys.argv) == 2:
 np.random.seed(JOB_ID)
 
 PARAMETERS_DF = pd.read_csv(
-    os.path.join(paths.PARAMETERS_DIR, "simulation.csv"), index_col=0
+    os.path.join(paths.PARAMETERS_DIR, "simulation2.csv"), index_col=0
 )
 
 NUM_NEURONS = int(PARAMETERS_DF.loc["num_neurons"].array[0])
@@ -86,13 +88,37 @@ CONT_BACK = PARAMETERS_DF.loc["cont_back"].array[0] / NUM_NEURONS
 # ------------------------- END parameter changes -------------------------- #
 # -------------------------------------------------------------------------- #
 
+from scipy import spatial
 # Functions dependent on seed
-def make_patterns(num_neurons: int, num_memories: int, sparsity: float) -> np.ndarray:
-    """Build memory neural patterns according to sparsity."""
+def make_patterns(num_memories: int, n_base_words=4) -> np.ndarray:
+    """Build memory neural patterns according to word embeddings."""
+    embeddings_dict = load_n_glove_embeddings(10_000)
+    base_words = np.random.choice(list(embeddings_dict.keys()), n_base_words)
+    num_neurons = 100000
+    output = np.zeros((num_neurons, num_memories))
+    n_words_per_base = num_memories // n_base_words
+    remainder = num_memories % n_base_words
+    if remainder == 0:
+        remainder = n_base_words
+    cycle_count = 1
+    word_count = 0
+    used_words = []
+    for word in base_words:
+        if cycle_count >= n_base_words:
+            similar_words = find_closest_embeddings(embeddings_dict, embeddings_dict[word])[0:n_words_per_base]
+        else:
+            similar_words = find_closest_embeddings(embeddings_dict, embeddings_dict[word])[0:remainder]
 
-    return np.random.choice(
-        (False, True), p=(1 - sparsity, sparsity), size=(num_neurons, num_memories)
-    )
+        print(similar_words)
+        for s_word in similar_words:
+            output[:, word_count] = continuous_to_discrete(embeddings_dict[s_word])
+            word_count += 1
+            used_words.append(s_word)
+            print(spatial.distance.euclidean(embeddings_dict[word], embeddings_dict[s_word]))
+        cycle_count += 1
+    
+    return output, used_words
+        
 
 def get_noise(
     noise_var: int,
@@ -107,7 +133,7 @@ def get_noise(
 
 
 # Connectivity
-patterns = make_patterns(NUM_NEURONS, NUM_MEMORIES, SPARSITY)
+patterns, words = make_patterns(NUM_MEMORIES)
 populations, population_sizes = sim.get_populations_and_sizes(patterns)
 num_populations = population_sizes.shape[0]
 
@@ -115,13 +141,15 @@ connectivity_reg, connectivity_back, connectivity_forth = sim.get_connectivities
     populations, NUM_MEMORIES
 )
 
+print(connectivity_reg.shape)
+
 populations_sized = populations * population_sizes[:, None]
 memories_similarities = populations_sized.T @ populations
 
 # Dynamics
 time = sim.prepare_times(T_TOT, T_STEP)
-sparsity_vect = np.full(NUM_MEMORIES, SPARSITY)
-initial_memory = np.random.choice(range(NUM_MEMORIES))
+sparsity_vect = np.mean(patterns, axis=0) # np.full(NUM_MEMORIES, np.mean(patterns))
+initial_memory = np.random.choice(range(0, NUM_MEMORIES))
 oscillation = np.vectorize(
     sim.oscillation_closure(sim.oscillation, SIN_MIN, SIN_MAX, NUM_NEURONS)
 )(time)
@@ -151,6 +179,7 @@ for n_iter, t_cycle in tqdm(enumerate(time)):
         - connectivity_reg @ sparsity_vect * total_activation
         + sparsity_vect @ sparsity_vect * total_activation
     )
+
     # (num_populations,) = () * (num_populations, NUM_MEMORIES) @ (NUM_MEMORIES,)
     # + () * (num_populations, NUM_MEMORIES) @ (NUM_MEMORIES,)
     contiguity_term = (
@@ -191,7 +220,7 @@ np.save(
 
 
 # Transform data and plot detailed dynamics only on selected seed
-if JOB_ID == 33:
+if JOB_ID == 11:
 
     # Dynamics
     print("Preparing to plot dynamics")
@@ -201,7 +230,7 @@ if JOB_ID == 33:
     currents_populations = (population_sizes * currents.T).T
     print("Done!")
 
-    plots.plot_firing_rates_attractors(firing_rates_memories, T_STEP, 15, 0)
+    plots.plot_firing_rates_attractors(firing_rates_memories, T_STEP, 20, 0, words)
     plots.plot_lines(
         firing_rates_memories,
         T_STEP,
@@ -215,7 +244,7 @@ if JOB_ID == 33:
     plots.plot_lines(
         currents_populations,
         T_STEP,
-        15,
+        20,
         0,
         "Population Current",
         "Average current",
@@ -224,7 +253,7 @@ if JOB_ID == 33:
     plots.plot_lines(
         currents_memories,
         T_STEP,
-        15,
+        20,
         1,
         "Memory Current",
         "Average current",
@@ -246,14 +275,14 @@ if JOB_ID == 33:
     )
 
     # Weights
-    weights_reg = sim.get_connectivity_term(
-        connectivity_reg, EXCITATION, NUM_NEURONS, SPARSITY
+    weights_reg = sim.get_connectivity_term_new(
+        connectivity_reg, EXCITATION, NUM_NEURONS, sparsity_vect
     )
-    weights_back = sim.get_connectivity_term(
-        connectivity_back, EXCITATION, NUM_NEURONS, SPARSITY
+    weights_back = sim.get_connectivity_term_new(
+        connectivity_back, EXCITATION, NUM_NEURONS, sparsity_vect
     )
-    weights_forth = sim.get_connectivity_term(
-        connectivity_forth, EXCITATION, NUM_NEURONS, SPARSITY
+    weights_forth = sim.get_connectivity_term_new(
+        connectivity_forth, EXCITATION, NUM_NEURONS, sparsity_vect
     )
     weigths_without_inhibition = weights_reg + weights_back + weights_forth
 

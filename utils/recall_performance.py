@@ -57,7 +57,7 @@ def load_sequences(file_paths: Iterable) -> None:
     for file_path in tqdm(file_paths):
         recall_sequence = np.load(file_path)
         new_row = {"Recall sequence": recall_sequence, "Length": len(recall_sequence)}
-        sequences_shapes = sequences_shapes.append(new_row, ignore_index=True)
+        sequences_shapes = sequences_shapes._append(new_row, ignore_index=True)
 
     # Take only arrays as long as the most common length
     intended_value = sequences_shapes["Length"].mode().array[0]
@@ -132,7 +132,7 @@ def get_main_df(
             continue
 
         trial_df = pd.DataFrame.from_dict(dicttrial)
-        metrics_df = metrics_df.append(trial_df)
+        metrics_df = metrics_df._append(trial_df)
 
     metrics_df = metrics_df.reset_index().rename(columns={"index": "position"})
     num_memories_recalled = (
@@ -140,11 +140,13 @@ def get_main_df(
         .agg({"position": np.max})
         .rename(columns={"position": "num_memories_recalled"})
     )
+    
     metrics_df = metrics_df.merge(num_memories_recalled, on="trial")
     metrics_df.num_memories_recalled = (
         metrics_df.num_memories_recalled + 1
     )  # for 1-based indexing
 
+    metrics_df.to_csv('Metrics.csv', index=False)
     print("Done!")
 
     return metrics_df

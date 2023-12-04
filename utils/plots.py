@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 
 def plot_firing_rates_attractors(
-    firing_rates: np.ndarray, t_step: float, num_oscillations: int, panel_num: int
+    firing_rates: np.ndarray, t_step: float, num_oscillations: int, panel_num: int, words : list = [] 
 ) -> None:
     """Plot attractor (memory) number active per time cycle."""
 
@@ -35,21 +35,24 @@ def plot_firing_rates_attractors(
 
     axis.set_title("Attractors")
     axis.set_xlabel("Time (cycles)")
-    axis.set_ylabel("Attractor number")
+    axis.set_ylabel("Attractor")
     axis.set_xticks(range(num_oscillations))
-    axis.set_yticks(range(num_memories))
+    if words:
+        axis.set_yticks(range(num_memories), words)
+    else:
+        axis.set_yticks(range(num_memories))
 
     fig.colorbar(heatmap, ax=axis, label="Average firing rate")
 
     axis.set_aspect(aspect="auto")
-    axis.text(
-        -0.2,
-        1.2,
-        string.ascii_uppercase[panel_num],
-        transform=axis.transAxes,
-        size=20,
-        weight="bold",
-    )
+    #axis.text(
+    #    -0.2,
+    #    1.2,
+    #    string.ascii_uppercase[panel_num],
+    #    transform=axis.transAxes,
+    #    size=20,
+    #    weight="bold",
+    #)
 
     plt.tight_layout()
     plt.savefig(os.path.join(paths.FIGURES_DIR, "firing_rates_attractors.pdf"))
